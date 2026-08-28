@@ -1776,14 +1776,15 @@ main,.mainPanel,.workspace,.reportWorkspace,.modelWorkspace,.measuresWorkspace{p
 .viewerVisual:hover{transform:translateY(-1px);box-shadow:0 16px 34px rgba(15,23,42,.12)!important}
 .viewerVisualTitle{min-height:44px!important;padding:11px 14px!important;background:linear-gradient(180deg,#ffffff,#fbfdff);font-size:14px!important;color:#111827!important}
 .viewerVisualBody{padding:10px 12px!important;background:#fff}
-/* Chart visuals: allow overflow so a small h-value doesn't hide the chart,
-   and ensure ECharts always has enough height to render. */
-.viewerVisual { overflow: visible !important; }
-.viewerVisualBody { overflow: visible !important; }
-.viewerVisual:not(.viewerVisual-card):not(.viewerVisual-kpi):not(.viewerVisual-progress):not(.viewerVisual-textbox):not(.viewerVisual-button):not(.viewerVisual-slicer):not(.viewerVisual-multirowcard) .viewerVisualBody{min-height:200px!important}
-.viewerVisualBody .echarts-for-react{height:100%!important;min-height:200px!important}
+/* Chart visuals: ensure ECharts always has enough height to render regardless of grid row size.
+   Keep overflow:hidden on the container for clean borders; give chart body a min-height. */
+.viewerVisual{overflow:hidden!important}
+.viewerVisual:not(.viewerVisual-card):not(.viewerVisual-kpi):not(.viewerVisual-progress):not(.viewerVisual-textbox):not(.viewerVisual-button):not(.viewerVisual-slicer):not(.viewerVisual-multirowcard){overflow:visible!important;min-height:250px!important}
+.viewerVisual:not(.viewerVisual-card):not(.viewerVisual-kpi):not(.viewerVisual-progress):not(.viewerVisual-textbox):not(.viewerVisual-button):not(.viewerVisual-slicer):not(.viewerVisual-multirowcard) .viewerVisualBody{flex:1!important;min-height:200px!important;height:200px!important;overflow:visible!important}
+.viewerVisualBody .echarts-for-react{width:100%!important;height:100%!important;min-height:200px!important}
+.viewerVisualBody .echarts-for-react>div{width:100%!important;height:100%!important;min-height:200px!important}
 .viewerVisual-kpi,.viewerVisual-card,.viewerVisual-progress{background:linear-gradient(135deg,#fff 0%,color-mix(in srgb,var(--viewer-accent) 6%,#fff) 100%)!important}
-.viewerVisual-kpi .viewerVisualBody,.viewerVisual-card .viewerVisualBody,.viewerVisual-progress .viewerVisualBody{background:transparent!important; min-height:80px!important}
+.viewerVisual-kpi .viewerVisualBody,.viewerVisual-card .viewerVisualBody,.viewerVisual-progress .viewerVisualBody{background:transparent!important;min-height:80px!important}
 .viewerVisual-kpi .kpiValue,.viewerVisual-card .advancedCardValue{font-size:38px!important;font-weight:850!important;letter-spacing:-.035em}
 .viewerVisual-kpi .kpiCaption,.viewerVisual-card .advancedCardLabel{font-size:12px!important;color:#475569!important;font-weight:600}
 .viewerViewModes{display:flex;gap:3px;padding:3px;background:#07101d;border:1px solid #29425f;border-radius:10px}
