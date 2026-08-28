@@ -1,0 +1,42 @@
+services:
+  # Python API backend
+  - type: web
+    name: vtab-reporting-api
+    runtime: python
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: python cloud_backend.py
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: VTAB_ENVIRONMENT
+        value: production
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: VTAB_WEB_URL
+        sync: false
+      - key: VTAB_ALLOWED_ORIGINS
+        sync: false
+      - key: PORT
+        value: 8820
+
+  # Frontend static site
+  - type: web
+    name: vtab-reporting-web
+    runtime: node
+    buildCommand: npm install && npm run build:web
+    startCommand: npx serve dist-web -l $PORT
+    envVars:
+      - key: VITE_APP_MODE
+        value: WORKSPACE_ONLY
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_WEB_URL
+        sync: false
