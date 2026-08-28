@@ -24,11 +24,10 @@ services:
         value: 8820
 
   # Frontend static site
-  - type: web
+  - type: static_site
     name: vtab-reporting-web
-    runtime: node
     buildCommand: npm install && npm run build:web
-    startCommand: npx serve dist-web -l $PORT
+    staticPublishPath: dist-web
     envVars:
       - key: VITE_APP_MODE
         value: WORKSPACE_ONLY
