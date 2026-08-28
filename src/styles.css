@@ -1778,11 +1778,12 @@ main,.mainPanel,.workspace,.reportWorkspace,.modelWorkspace,.measuresWorkspace{p
 .viewerVisualBody{padding:10px 12px!important;background:#fff}
 /* Chart visuals: allow overflow so a small h-value doesn't hide the chart,
    and ensure ECharts always has enough height to render. */
-.viewerVisual:not(.viewerVisual-card):not(.viewerVisual-kpi):not(.viewerVisual-progress):not(.viewerVisual-textbox):not(.viewerVisual-button):not(.viewerVisual-slicer):not(.viewerVisual-multirowcard){overflow:visible!important}
+.viewerVisual { overflow: visible !important; }
+.viewerVisualBody { overflow: visible !important; }
 .viewerVisual:not(.viewerVisual-card):not(.viewerVisual-kpi):not(.viewerVisual-progress):not(.viewerVisual-textbox):not(.viewerVisual-button):not(.viewerVisual-slicer):not(.viewerVisual-multirowcard) .viewerVisualBody{min-height:200px!important}
 .viewerVisualBody .echarts-for-react{height:100%!important;min-height:200px!important}
 .viewerVisual-kpi,.viewerVisual-card,.viewerVisual-progress{background:linear-gradient(135deg,#fff 0%,color-mix(in srgb,var(--viewer-accent) 6%,#fff) 100%)!important}
-.viewerVisual-kpi .viewerVisualBody,.viewerVisual-card .viewerVisualBody,.viewerVisual-progress .viewerVisualBody{background:transparent!important}
+.viewerVisual-kpi .viewerVisualBody,.viewerVisual-card .viewerVisualBody,.viewerVisual-progress .viewerVisualBody{background:transparent!important; min-height:80px!important}
 .viewerVisual-kpi .kpiValue,.viewerVisual-card .advancedCardValue{font-size:38px!important;font-weight:850!important;letter-spacing:-.035em}
 .viewerVisual-kpi .kpiCaption,.viewerVisual-card .advancedCardLabel{font-size:12px!important;color:#475569!important;font-weight:600}
 .viewerViewModes{display:flex;gap:3px;padding:3px;background:#07101d;border:1px solid #29425f;border-radius:10px}
