@@ -52,14 +52,15 @@ except Exception as exc:
 # or needs recovery. Data/Transform/Model endpoints initialize it lazily.
 store=Store(); app=FastAPI(title='VTAB Reporting Studio API',version='5.0.15')
 _extra_origins = [o.strip() for o in os.environ.get('VTAB_ALLOWED_ORIGINS','').split(',') if o.strip()]
+_allow_all_origins = '*' in _extra_origins
 app.add_middleware(
     CORSMiddleware,
     # tauri://localhost  → Tauri v2 on Linux / macOS
     # http://tauri.localhost  → Tauri v2 on Windows (WebView2, plain HTTP)
     # https://tauri.localhost → Tauri v2 on Windows (some configs)
-    allow_origins=['tauri://localhost','http://tauri.localhost','https://tauri.localhost'] + _extra_origins,
-    allow_origin_regex=r'https?://(127\.0\.0\.1|localhost):\d+',
-    allow_credentials=True,
+    allow_origins=['*'] if _allow_all_origins else (['tauri://localhost','http://tauri.localhost','https://tauri.localhost'] + _extra_origins),
+    allow_origin_regex=None if _allow_all_origins else r'https?://(127\.0\.0\.1|localhost):\d+',
+    allow_credentials=not _allow_all_origins,  # credentials cannot be used with wildcard
     allow_methods=['*'],
     allow_headers=['*'],
 )
