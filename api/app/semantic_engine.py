@@ -117,7 +117,8 @@ def required(model,dims,measures,rls,filters=()):
                     names.add(ref);changed=True
     txt=' '.join(model.get('measures',{}).get(n,'') for n in names)
     for t in model['tables']:
-        if t+'.' in txt or re.search(r'(?i)\b'+re.escape(t)+r'\s*\[',txt):req.add(t)
+        if t+'.' in txt or re.search(r'(?i)\b' + re.escape(t) + r'[\'"]?\s*([\[\.])', txt):
+            req.add(t)
     
     # Detect implicit column references in measures (e.g., SUM(Revenue))
     dax_funcs = {'SUM','AVG','MIN','MAX','COUNT','DISTINCTCOUNT','DIVIDE','CALCULATE','VAR','RETURN','EDATE','DATESBETWEEN'}
@@ -148,7 +149,7 @@ def compile_query(model,req,rls=()):
     words = set(re.findall(r'[A-Za-z0-9_]+', measure_text))
     for table, t_def in model.get('tables',{}).items():
         if table in needed:
-            if table+'.' in measure_text or re.search(r'(?i)\b'+re.escape(table)+r'\s*\[',measure_text):
+            if table+'.' in measure_text or re.search(r'(?i)\b' + re.escape(table) + r'[\'"]?\s*([\[\.])', measure_text):
                 preferred.append(table)
                 continue
             for w in words:
@@ -250,6 +251,10 @@ def compile_query(model,req,rls=()):
         ops={'equals':'=','not_equals':'<>','gt':'>','gte':'>=','lt':'<','lte':'<='}
         if op=='contains':wh.append(field_sql+' LIKE ?');params.append('%'+str(val)+'%')
         elif op=='between' and isinstance(val,(list,tuple)) and len(val)==2:wh.append(field_sql+' BETWEEN ? AND ?');params.extend([val[0],val[1]])
+        elif op in ('top_n', 'bottom_n'):
+            try: req['limit'] = int(val)
+            except (ValueError, TypeError): pass
+            # We don't add a WHERE clause constraint for top_n; it relies on ORDER BY + LIMIT
         elif op=='in':
             vals=val if isinstance(val,(list,tuple)) else [x.strip() for x in str(val).split(',') if x.strip()]
             if not vals:wh.append('1=0')

@@ -156,10 +156,17 @@ def hydrate_snapshot_sources(project: dict[str, Any], access_token: str, expires
                 with tempfile.NamedTemporaryFile(dir=cache_root, suffix=".tmp", delete=False) as temporary:
                     temporary.write(bytes(payload))
                     temporary_path = Path(temporary.name)
-                os.replace(temporary_path, cache_path)
+                try:
+                    os.replace(temporary_path, cache_path)
+                except PermissionError:
+                    if not cache_path.is_file() or cache_path.stat().st_size == 0:
+                        raise
             finally:
                 if temporary_path and temporary_path.exists():
-                    temporary_path.unlink(missing_ok=True)
+                    try:
+                        temporary_path.unlink(missing_ok=True)
+                    except PermissionError:
+                        pass
         table["sourceUrl"] = str(cache_path)
     return snapshot
 

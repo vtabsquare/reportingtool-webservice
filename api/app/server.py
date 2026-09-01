@@ -1639,7 +1639,10 @@ def published_snapshot_query(req:PublishedSnapshotQueryReq,authorization:str|Non
     try:
         payload=req.model_dump();payload.pop('project',None)
         rows,sql=execute(p['model'],payload,rules);store.log('published.snapshot.query.execute',{'dimensions':req.dimensions,'measures':req.measures,'rows':len(rows)});return {'rows':rows,'sql':sql}
-    except Exception as e:raise HTTPException(400,str(e))
+    except Exception as e:
+        print(f"FAILED QUERY PAYLOAD: {req.model_dump()}")
+        print(f"EXCEPTION: {e}")
+        raise HTTPException(400,str(e))
 
 @app.get('/api/v1/storage/stats')
 def get_storage_stats():
