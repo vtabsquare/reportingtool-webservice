@@ -124,22 +124,26 @@ def list_accessible_reports(user_id: str) -> list:
     role_map = {g["report_id"]: g["role"] for g in grants.data}
 
     reports = sb.table("published_reports") \
-        .select("id, name, published_at, project_json") \
+        .select("id, name, published_at, updated_at, project_json") \
         .in_("id", report_ids) \
         .order("published_at", desc=True) \
         .execute()
 
     out = []
     for r in (reports.data or []):
-        meta = json.loads(r.get("project_json") or "{}")
-        report_obj = meta.get("report") or {}
-        pages = report_obj.get("pages") or []
+        try:
+            p = json.loads(r.get("project_json", "{}"))
+        except:
+            p = {}
+        pages = p.get("report", {}).get("pages", [])
         out.append({
             "id": r["id"],
             "name": r["name"],
             "published_at": r["published_at"],
+            "updated_at": r.get("updated_at"),
+            "role": role_map.get(r["id"], "Viewer"),
             "pages": len(pages),
-            "role": role_map.get(r["id"], "Viewer")
+            "sourceType": p.get("sourceType") or p.get("dataSourceType")
         })
     return out
 
@@ -318,24 +322,16 @@ def get_workspace_detail(workspace_id: str, user_id: str) -> dict:
         .eq('workspace_id', workspace_id) \
         .execute()
 
-    # Get member emails via admin auth API
     member_list = []
-    import urllib.request, base64
-    url_base = os.environ.get('VITE_SUPABASE_URL', '').rstrip('/')
-    svc_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
+    member_ids = [m['user_id'] for m in (members.data or [])]
+    if member_ids:
+        users = sb.table('vtab_users').select('id, email').in_('id', member_ids).execute()
+        email_map = {u['id']: u['email'] for u in (users.data or [])}
+    else:
+        email_map = {}
+
     for m in (members.data or []):
-        email = m['user_id']  # fallback
-        if url_base and svc_key:
-            try:
-                req = urllib.request.Request(
-                    f"{url_base}/auth/v1/admin/users/{m['user_id']}",
-                    headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}'}
-                )
-                with urllib.request.urlopen(req, timeout=10) as r:
-                    user_data = json.loads(r.read().decode('utf-8'))
-                    email = user_data.get('email', m['user_id'])
-            except Exception:
-                pass
+        email = email_map.get(m['user_id'], m['user_id'])
         member_list.append({
             'user_id': m['user_id'],
             'email': email,

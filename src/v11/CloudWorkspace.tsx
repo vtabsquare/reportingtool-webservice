@@ -67,19 +67,7 @@ export default function CloudWorkspace({ session }: { session: any }) {
   const suggestTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchReports = async () => {
-    const { data: grants, error: gErr } = await supabase!.from("report_access_grants").select("report_id, role").eq("user_id", session?.user?.id);
-    if (gErr) throw gErr;
-    if (!grants || grants.length === 0) return [];
-    const ids = grants.map((g: any) => g.report_id);
-    const { data: rows, error: rErr } = await supabase!.from("published_reports").select("id, name, published_at, project_json").in("id", ids);
-    if (rErr) throw rErr;
-    const roleMap: Record<string, string> = {};
-    grants.forEach((g: any) => { roleMap[g.report_id] = g.role; });
-    return (rows || []).map((r: any) => ({
-      ...r, role: roleMap[r.id] || "Viewer",
-      project: (() => { try { return JSON.parse(r.project_json || "{}"); } catch { return {}; } })(),
-      pages: (() => { try { return JSON.parse(r.project_json)?.report?.pages?.length || 1; } catch { return 1; } })()
-    }));
+    return await api<any[]>('/cloud/reports');
   };
 
   const loadData = async () => {
@@ -362,7 +350,7 @@ export default function CloudWorkspace({ session }: { session: any }) {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
                 {filteredReports.map(r => {
                   const canManage = ['Owner','Co-Owner','Admin'].includes(r.role);
-                  const sourceType = r.project?.sourceType || r.project?.dataSourceType || null;
+                  const sourceType = r.sourceType || null;
                   const isCloudSource = sourceType && ['google_sheets','postgres','sqlserver'].includes(sourceType);
                   return (
                     <div key={r.id}
