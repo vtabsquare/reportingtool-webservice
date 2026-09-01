@@ -77,7 +77,12 @@ export default function PublishedViewer({reportId,initialItem,embedded=false,clo
  },[reportId,initialItem?.id]);
  const project=item?.project,report=project?.report,pages=report?.pages||[],page=pages[pageIndex]||pages[0],s=page?.settings||{};
  const width=s.pageWidth||1600,height=s.pageHeight||900;
- const visualBottom=(page?.visuals||[]).reduce((m:any,v:any)=>Math.max(m,(v.y||0)*70+(v.h||2)*54+Math.max(0,(v.h||2)-1)*16),0);
+ const visualBottom=(page?.visuals||[]).reduce((m:any,v:any)=>{
+    const isChartType=!['textbox','button','slicer','card','kpi','multirowcard','progress'].includes(v.type);
+    const gy=Math.max(0,Math.round(v.y||0));
+    const gh=Math.max(isChartType?5:2,Math.round(v.h||2));
+    return Math.max(m, (gy + gh) * 66);
+ },0);
  const headerHeight=s.header?.visible!==false?(s.header?.height||84):0;
  const contentHeight=Math.max(480,headerHeight+34+visualBottom+(s.footerGap??96));
  const effectiveHeight=Math.max(height,contentHeight);
