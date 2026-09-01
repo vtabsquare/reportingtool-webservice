@@ -831,6 +831,20 @@ def cloud_delete_workspace(workspace_id:str, authorization:str|None=Header(defau
     except Exception as e: raise HTTPException(400,str(e))
 
 
+@app.delete('/api/v1/cloud/reports/{report_id}')
+def cloud_delete_report(report_id:str, authorization:str|None=Header(default=None)):
+    """Delete a cloud report."""
+    try:
+        from .supabase_store import delete_published_report_cloud as _delete
+    except ImportError:
+        raise HTTPException(503,'supabase package not installed')
+    user_id=_supabase_user_id_from_token(authorization)
+    try:
+        return _delete(report_id, user_id)
+    except PermissionError as e: raise HTTPException(403,str(e))
+    except Exception as e: raise HTTPException(400,str(e))
+
+
 @app.post('/api/v1/cloud/workspaces/{workspace_id}/members')
 def cloud_add_workspace_member(workspace_id:str, payload:dict, authorization:str|None=Header(default=None)):
     """Add a member to a workspace."""

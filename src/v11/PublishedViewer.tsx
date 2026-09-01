@@ -12,12 +12,31 @@ const WORKSPACE_ONLY=import.meta.env.VITE_APP_MODE==='WORKSPACE_ONLY';
 async function fetchReportFromSupabase(reportId:string):Promise<any>{
   const{supabase}=await import('../supabase');
   if(!supabase)throw new Error('Supabase not configured');
+  
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+
   const{data,error}=await supabase
     .from('published_reports')
-    .select('id,name,published_at,updated_at,project_json')
+    .select('id,name,published_at,updated_at,project_json,owner_id')
     .eq('id',reportId)
     .single();
-  if(error)throw new Error(error.message);
+  if(error)throw error;
+
+  if (data.owner_id && data.owner_id !== userId) {
+    if (!userId) throw new Error("Access Denied: You must be signed in to view this report.");
+    const { data: grants, error: gErr } = await supabase
+      .from('report_access_grants')
+      .select('role')
+      .eq('report_id', reportId)
+      .eq('user_id', userId);
+    
+    if (gErr) throw gErr;
+    if (!grants || grants.length === 0) {
+      throw new Error("Access Denied / No Permission: You do not have permission to view this report.");
+    }
+  }
+
   return{...data,project:JSON.parse(data.project_json)};
 }
 

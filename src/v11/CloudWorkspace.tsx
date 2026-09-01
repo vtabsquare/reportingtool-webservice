@@ -399,6 +399,17 @@ export default function CloudWorkspace({ session }: { session: any }) {
                               ⏳
                             </button>
                           )}
+                          {canManage && (
+                            <button title="Delete Report" onClick={async () => {
+                              if(!confirm(`Are you sure you want to delete report "${r.name}"? This action cannot be undone.`)) return;
+                              try {
+                                await api(`/cloud/reports/${r.id}`, { method: 'DELETE' });
+                                loadData();
+                              } catch(e:any) { alert(e.message || String(e)); }
+                            }} style={{ padding: "7px 10px", background: "#fef2f2", color: "#ef4444", border: "1.5px solid #fee2e2", borderRadius: 8, cursor: "pointer", fontSize: 16 }}>
+                              🗑️
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

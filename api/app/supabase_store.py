@@ -604,3 +604,18 @@ def update_job_status(job_id: str, status: str, error_message: str = None, last_
     if next_run:
         patch['next_run'] = next_run
     sb.table('scheduled_jobs').update(patch).eq('id', job_id).execute()
+
+def delete_published_report_cloud(report_id: str, user_id: str) -> dict:
+    """Delete a published report if the user is the owner or an admin of the workspace it belongs to."""
+    sb = _admin_client()
+    rep = sb.table('published_reports').select('owner_id').eq('id', report_id).execute()
+    
+    if not rep.data:
+        raise ValueError('Report not found')
+        
+    is_owner = bool(rep.data[0].get('owner_id') == user_id)
+    if not is_owner:
+        raise PermissionError('Only the report owner can delete this report from the cloud.')
+        
+    sb.table('published_reports').delete().eq('id', report_id).execute()
+    return {'ok': True, 'id': report_id}
