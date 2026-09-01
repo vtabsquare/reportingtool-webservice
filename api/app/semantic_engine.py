@@ -73,7 +73,16 @@ def inline(exp,model,stack,context_filters=None):
     if re.search(r"[;'\"`]",exp):
         raise ValueError('Unsafe measure expression')
     out=exp
-    for ref in re.findall(r'\[([^]]+)\]',exp):
+    
+    if model and 'measures' in model:
+        for m_name in sorted(model['measures'].keys(), key=len, reverse=True):
+            pattern = r'(?<!\[)(?<!\.)\b' + re.escape(m_name) + r'\b(?!\])'
+            if re.search(pattern, out, re.IGNORECASE):
+                # We use a lambda to insert the original matched case into the bracket if needed,
+                # but inserting the actual exact m_name is better so it matches exactly.
+                out = re.sub(pattern, f'[{m_name}]', out, flags=re.IGNORECASE)
+
+    for ref in re.findall(r'\[([^]]+)\]',out):
         out=out.replace(f'[{ref}]',f'({measure(ref,model,stack,context_filters,False)})')
     return out
 
@@ -109,6 +118,16 @@ def required(model,dims,measures,rls,filters=()):
     txt=' '.join(model.get('measures',{}).get(n,'') for n in names)
     for t in model['tables']:
         if t+'.' in txt or re.search(r'(?i)\b'+re.escape(t)+r'\s*\[',txt):req.add(t)
+    
+    # Detect implicit column references in measures (e.g., SUM(Revenue))
+    dax_funcs = {'SUM','AVG','MIN','MAX','COUNT','DISTINCTCOUNT','DIVIDE','CALCULATE','VAR','RETURN','EDATE','DATESBETWEEN'}
+    words = set(re.findall(r'[A-Za-z0-9_]+', txt))
+    for w in words:
+        if w.upper() not in dax_funcs:
+            for t_name, t_def in model.get('tables', {}).items():
+                if w in t_def.get('columns', {}):
+                    req.add(t_name)
+
     for r in rls:req.add(r['table'])
     return req
 
@@ -125,9 +144,17 @@ def compile_query(model,req,rls=()):
     # join through one or more bridge tables.
     measure_text=' '.join(model.get('measures',{}).get(m,'') for m in meas)
     preferred=[]
-    for table in model.get('tables',{}):
-        if table in needed and (table+'.' in measure_text or re.search(r'(?i)\b'+re.escape(table)+r'\s*\[',measure_text)):
-            preferred.append(table)
+    dax_funcs = {'SUM','AVG','MIN','MAX','COUNT','DISTINCTCOUNT','DIVIDE','CALCULATE','VAR','RETURN','EDATE','DATESBETWEEN'}
+    words = set(re.findall(r'[A-Za-z0-9_]+', measure_text))
+    for table, t_def in model.get('tables',{}).items():
+        if table in needed:
+            if table+'.' in measure_text or re.search(r'(?i)\b'+re.escape(table)+r'\s*\[',measure_text):
+                preferred.append(table)
+                continue
+            for w in words:
+                if w.upper() not in dax_funcs and w in t_def.get('columns', {}):
+                    preferred.append(table)
+                    break
     if not preferred:
         for m in meas:
             if '.' in m and m not in model.get('measures',{}):
