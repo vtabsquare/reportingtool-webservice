@@ -79,10 +79,10 @@ function ViewerVisual({reportId,v,roleId,extraFilters,onCrossFilter,onAction,pro
  return <>{card}{focus&&createPortal(<div className="visualFocusBackdrop" onMouseDown={()=>setFocus(false)}><div className="visualFocusPanel viewerFocusPanel" onMouseDown={e=>e.stopPropagation()}><div className="visualFocusHeader"><div><small>FOCUS MODE</small><b>{v.title}</b></div><button onClick={()=>setFocus(false)}>Close</button></div><div className="visualFocusBody">{content}</div></div></div>,document.body)}</>
 }
 export default function PublishedViewer({reportId,initialItem,embedded=false,cloudMode=false}:{reportId:string,initialItem?:any,embedded?:boolean,cloudMode?:boolean}){
- const[item,setItem]=useState<any>(initialItem||null),[error,setError]=useState(''),[pageIndex,setPageIndex]=useState(0),[full,setFull]=useState(!embedded),[viewMode,setViewMode]=useState<'fitWidth'|'fitPage'|'actual'>('fitWidth'),[scale,setScale]=useState(1),[interactionFilters,setInteractionFilters]=useState<VisualFilter[]>([]),[runtimeHidden,setRuntimeHidden]=useState<Record<string,boolean>>({}),[authRequired,setAuthRequired]=useState(false),[signedIn,setSignedIn]=useState(true),[login,setLogin]=useState({email:'',password:''});
+ const[item,setItem]=useState<any>((initialItem && initialItem.project)?initialItem:null),[error,setError]=useState(''),[pageIndex,setPageIndex]=useState(0),[full,setFull]=useState(!embedded),[viewMode,setViewMode]=useState<'fitWidth'|'fitPage'|'actual'>('fitWidth'),[scale,setScale]=useState(1),[interactionFilters,setInteractionFilters]=useState<VisualFilter[]>([]),[runtimeHidden,setRuntimeHidden]=useState<Record<string,boolean>>({}),[authRequired,setAuthRequired]=useState(false),[signedIn,setSignedIn]=useState(true),[login,setLogin]=useState({email:'',password:''});
  const stageRef=useRef<HTMLElement|null>(null);
  const load=()=>{
-  if(initialItem){setItem(initialItem);setError('');return;}
+  if(initialItem && initialItem.project){setItem(initialItem);setError('');return;}
   if(WORKSPACE_ONLY){
    fetchReportFromSupabase(reportId).then(x=>{setItem(x);setError('')}).catch(e=>setError(e.message||String(e)));
    return;
@@ -90,7 +90,7 @@ export default function PublishedViewer({reportId,initialItem,embedded=false,clo
   api<any>(`/published/${reportId}`).then(x=>{setItem(x);setError('')}).catch(e=>setError(e.message||String(e)))
  };
  useEffect(()=>{
-  if(initialItem){setItem(initialItem);setError('');return;}
+  if(initialItem && initialItem.project){setItem(initialItem);setError('');return;}
   if(WORKSPACE_ONLY){load();return;}
   api<any>('/auth/status').then(s=>{setAuthRequired(!!s.required);if(s.required){api('/auth/me').then(()=>{setSignedIn(true);load()}).catch(()=>setSignedIn(false))}else load()})
  },[reportId,initialItem?.id]);

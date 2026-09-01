@@ -113,7 +113,7 @@ def grant_access(report_id: str, email: str, role: str, granter_user_id: str, ac
 
 def list_accessible_reports(user_id: str) -> list:
     """List all reports the given Supabase user has been granted access to."""
-    sb = _client()
+    sb = _admin_client()
     grants = sb.table("report_access_grants") \
         .select("report_id, role") \
         .eq("user_id", user_id) \
